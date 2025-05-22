@@ -23,3 +23,6 @@ Cleand pdb file
 ions.mdp, minim.mdp, nvt.mdp, npt.mdp, and md.mdp files.
 
 Linux os with a https://ftp.gromacs.org/gromacs/gromacs-2025.2.tar.gz
+
+All the codes are reffered from ggromacs tutorial 
+http://www.mdtutorials.com/gmx/lysozyme/index.html
