@@ -1,0 +1,53 @@
+Gromacs commands 
+ Lysozyme in water
+1.	Preparation of gmx file
+gmx pdb2gmx -f <input file name>.pdb -o 1.gro -p 1.top -water spce -ignh
+select 15 
+2.	Add box
+ gmx editconf -f 1.gro -o box.gro -c -d 1.0 -bt cubic
+3.	Solvation 
+gmx solvate -cp box.gro -cs spc216.gro -o water_box.gro -p 1.top
+4.	Neutralization of protein
+gmx grompp -f ions.mdp -c water_box.gro -p 1.top -o ions.tpr 
+( incase of error use “-maxwarn1”) 
+gmx genion -s ions.tpr -o water_ions.gro -p 1.top -pname NA -nname CL -neutral 
+ Type 13 & enter
+5.	Energy Minimization: 
+gmx grompp -f minim.mdp -c water_ions.gro -p 1.top -o energymin.tpr
+6.	MD run: 
+ gmx mdrun -v -s energymin.tpr -deffnm em
+7.	 PEC: 
+gmx energy -f em.edr -o potential.xvg 
+Type 10 0 & enter
+8.	Equilibration (NVT) 
+ gmx grompp -f nvt.mdp -c em.gro -r em.gro -p 1.top -o nvt.tpr 
+gmx mdrun -deffnm nvt -v
+9.	Equilibration (NPT) 
+gmx grompp -f npt.mdp -c nvt.gro -r nvt.gro -t nvt.cpt -p 1.top -o npt.tpr 
+gmx mdrun -deffnm npt -v
+10.	MD Run (FULL)
+gmx grompp -f md.mdp -c npt.gro -t npt.cpt -p 1.top -o full_md.tpr 
+gmx mdrun -deffnm full_md -v
+
+
+# Trajectory file generation.
+gmx trjconv -s full_md.tpr -f md_nojump.xtc -o md_nojump1.xtc -pbc nojump
+# Choose system.
+gmx trjconv -s full_md.tpr -f md_nojump1.xtc -o md_center.xtc -center -pbc mol
+# select protein and system
+gmx trjconv -s full_md.tpr -f md_center.xtc -o md_fit.xtc -fit rot+trans
+# backbone and system
+# For RMSD
+gmx rms -s full_md.tpr -f md_fit.xtc -o rmsd.xvg -tu ps
+# Select backbone for both
+# RMSF
+gmx rmsf -s full_md.tpr -f md_fit.xtc -o rmsf.xvg -res
+# select protein for both
+
+# Gyration
+gmx gyrate -s full_md.tpr -f md_fit.xtc -o gyrate.xvg
+# select protein
+
+# SASA
+gmx sasa -s full_md.tpr -f md_fit.xtc -o sasa.xvg
+# select protein 
